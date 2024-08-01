@@ -24,11 +24,21 @@ type Program struct {
 	Statements []Statement
 }
 
+func (p *Program) TokenLiteral() string {
+	if len(p.Statements) > 0 {
+		return p.Statements[0].TokenLiteral()
+	} else {
+		return ""
+	}
+}
+
 func (p *Program) String() string {
 	var out bytes.Buffer
+
 	for _, s := range p.Statements {
 		out.WriteString(s.String())
 	}
+
 	return out.String()
 }
 
@@ -43,7 +53,7 @@ func (i *Identifier) TokenLiteral() string {
 	return i.Token.Literal
 }
 func (i *Identifier) String() string {
-	str := fmt.Sprintf("%s %s ", i.HoldsVarType.Literal, i.TokenLiteral())
+	str := fmt.Sprintf("%s %s", i.HoldsVarType.Literal, i.TokenLiteral())
 
 	return str
 }
@@ -79,6 +89,38 @@ type IntegerLiteral struct {
 func (il *IntegerLiteral) expressionNode()      {}
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
 func (il *IntegerLiteral) String() string       { return il.Token.Literal }
+
+type BoolStatement struct {
+	Token token.Token // token.BOOL
+	Name  *Identifier
+	Value Expression
+}
+
+func (is *BoolStatement) expressionNode() {}
+func (is *BoolStatement) statementNode()  {}
+func (is *BoolStatement) TokenLiteral() string {
+	return is.Token.Literal
+}
+func (is *BoolStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(is.TokenLiteral())
+	out.WriteString(is.Name.String())
+	out.WriteString("= ")
+	if is.Value != nil {
+		out.WriteString(is.Value.String())
+	}
+	// out.WriteString(";")
+	return out.String()
+}
+
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (b *Boolean) expressionNode()      {}
+func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
+func (b *Boolean) String() string       { return b.Token.Literal }
 
 type ReturnStatement struct {
 	Token       token.Token // the 'return' token
@@ -165,7 +207,7 @@ func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
 func (bs *BlockStatement) String() string {
 	var out bytes.Buffer
 	for _, s := range bs.Statements {
-		out.WriteString(fmt.Sprint("    ", s.String(), "\n"))
+		out.WriteString(fmt.Sprint("", s.String(), "\n"))
 	}
 
 	return out.String()
@@ -272,12 +314,3 @@ func (ce *CallExpression) String() string {
 
 	return out.String()
 }
-
-type Boolean struct {
-	Token token.Token
-	Value bool
-}
-
-func (b *Boolean) expressionNode()      {}
-func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
-func (b *Boolean) String() string       { return b.Token.Literal }

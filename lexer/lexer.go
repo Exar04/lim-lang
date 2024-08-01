@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"fmt"
 	"lim-lang/token"
 )
 
@@ -10,12 +11,13 @@ type Lexer struct {
 	readPosition int
 	ch           byte
 
-	CurrentLine       int
-	PreviousLineStart int
-	CurrentLineStart  int
-	PosG              int
+	// CurrentLine       int
+	// PreviousLineStart int
+	// CurrentLineStart int
+	// PosG              int
 	// errLine              string
-	illegalTokenPosition int
+	AtCharNumFromCurrentLine int
+	illegalTokenPosition     int
 	// tokenErrors []tokenErr // this will store all the illegal tokens and their line numbers { lineNum, tokenName, line }
 }
 
@@ -38,18 +40,23 @@ func (l *Lexer) readChar() {
 		l.ch = l.input[l.readPosition]
 	}
 	l.position = l.readPosition
-	l.PosG = l.position //////// L take
+	// l.PosG = l.position //////// L take
 	l.readPosition += 1
+	if l.ch != '\t' {
+		l.AtCharNumFromCurrentLine += 1
+	}
 
 	if l.ch == '\n' {
-		l.CurrentLine += 1
-		l.PreviousLineStart = l.CurrentLineStart
-		l.CurrentLineStart = l.readPosition
+		l.AtCharNumFromCurrentLine = 0
+		l.ch = 10
+		// fmt.Println(l.ch)
 	}
 }
+
 func (l *Lexer) ReadErrorLine() string {
-	cln := l.CurrentLineStart
+	cln := l.position - l.AtCharNumFromCurrentLine + 1
 	var errStr string
+	fmt.Println(cln)
 	for l.input[cln] != '\n' {
 		// l.errLine += string(l.input[cln])
 		errStr += string(l.input[cln])
@@ -69,6 +76,8 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 
 	switch l.ch {
+	case '\n':
+		tok = token.Token{Type: token.ENDOFLINE, Literal: string(l.ch)}
 	case '=':
 		if l.peekChar() == '=' {
 			ch := l.ch
@@ -141,8 +150,9 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Literal = l.realNumber()
 			return tok
 		} else {
-			l.ReadErrorLine()
-			l.illegalTokenPosition = l.position - l.CurrentLineStart
+			// l.ReadErrorLine()
+			// l.illegalTokenPosition = l.position - l.CurrentLineStart
+			l.illegalTokenPosition = l.AtCharNumFromCurrentLine
 			tok = newToken(token.ILLEGAL, l.ch)
 		}
 	}
@@ -163,7 +173,7 @@ func isDigit(ch byte) bool {
 }
 
 func (l *Lexer) skipWhitespace() {
-	for l.ch == ' ' || l.ch == '\t' || l.ch == '\r' || l.ch == '\n' {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\r' {
 		l.readChar()
 	}
 }

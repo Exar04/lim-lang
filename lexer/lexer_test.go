@@ -41,7 +41,7 @@ func CheckIllegalTok(t *testing.T) {
 			}
 			fmt.Print("^\n")
 
-			fmt.Println("Error at line : ", l.CurrentLine, tok.Literal, tok.Type)
+			fmt.Println("Error : ", tok.Literal, tok.Type)
 		}
 	}
 }

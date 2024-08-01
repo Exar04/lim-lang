@@ -7,6 +7,7 @@ package parser
 //  Tests for all the functions is still remaining
 
 import (
+	"bytes"
 	"fmt"
 	"lim-lang/ast"
 	"lim-lang/lexer"
@@ -50,6 +51,8 @@ type Parser struct {
 
 	curToken  token.Token
 	peekToken token.Token
+
+	curLineNum int
 
 	prefixParseFns map[token.TokenType]prefixParseFn
 	infixParseFns  map[token.TokenType]infixParseFn
@@ -103,17 +106,26 @@ func (p *Parser) parseIdentifier() ast.Expression {
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
 	p.peekToken = p.l.NextToken()
+	if p.curToken.Type == token.ENDOFLINE {
+		p.curLineNum += 1
+		p.nextToken()
+	}
 }
+
 func (p *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 
 	for p.curToken.Type != token.EOF {
 		if p.curToken.Type == token.ILLEGAL {
+			// p.peekError(p.curToken.Type)
 			// handle the illegal token
-			p.peekError(p.curToken.Type)
-			p.nextToken()
+			return nil
 		}
+		if p.curToken.Type == token.ENDOFLINE {
+			p.curLineNum += 1
+		}
+
 		stmt := p.parseStatement()
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt)
@@ -130,8 +142,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseFunctionStatement()
 	case token.IF:
 		return p.parseIfStatement()
-	// case token.Keywork_BOOL:
-	// 	return p.parseBoolStatement()
+	case token.Keywork_BOOL:
+		return p.parseBoolStatement()
 	// case token.Keywork_STRING:
 	// 	return p.parseStringStatement()
 	// case token.Keywork_FLOAT:
@@ -152,6 +164,26 @@ func (p *Parser) parseIntStatement() *ast.IntStatement {
 	if !p.expectPeek(token.ASSIGN) {
 		if p.peekTokenIs(token.SEMICOLON) {
 			stmt.Value = &ast.IntegerLiteral{Token: token.Token{Type: token.INT, Literal: "int"}, Value: 0}
+			return stmt
+		}
+		return nil
+	}
+	p.nextToken()
+	stmt.Value = p.parseExpression(LOWEST)
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+	return stmt
+}
+func (p *Parser) parseBoolStatement() *ast.BoolStatement {
+	stmt := &ast.BoolStatement{Token: p.curToken}
+	if !p.expectPeek(token.IDENT) {
+		return nil
+	}
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	if !p.expectPeek(token.ASSIGN) {
+		if p.peekTokenIs(token.SEMICOLON) {
+			stmt.Value = &ast.Boolean{Token: token.Token{Type: token.BOOL, Literal: "bool"}, Value: false}
 			return stmt
 		}
 		return nil
@@ -226,7 +258,6 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
-
 	return stmt
 }
 func (p *Parser) parseExpression(precedence int) ast.Expression {
@@ -314,16 +345,15 @@ func (p *Parser) parseIfStatement() *ast.IfStatement {
 
 	for p.peekTokenIs(token.ELSE) {
 		p.nextToken()
-
 		if !p.peekTokenIs(token.IF) && p.peekTokenIs(token.LBRACE) {
-			elseStmt := &ast.IfStatement{Token: p.curToken, NextCase: nil}
+			elseStmt := &ast.IfStatement{Token: p.curToken, Condition: nil, NextCase: nil}
 
 			if !p.peekTokenIs(token.LBRACE) {
 				return nil
 			}
+			p.nextToken()
 			elseStmt.Consequence = p.parseBlockStatement()
 			leafIfStmt.NextCase = elseStmt
-
 			return rootIfStmt
 
 		} else if !p.peekTokenIs(token.IF) && !p.peekTokenIs(token.LBRACE) {
@@ -344,6 +374,7 @@ func (p *Parser) parseIfStatement() *ast.IfStatement {
 		nextIfStmt.Consequence = p.parseBlockStatement()
 		leafIfStmt.NextCase = nextIfStmt
 		leafIfStmt = nextIfStmt
+		// fmt.Println("tf end: ", p.curToken, p.peekToken)
 	}
 	return rootIfStmt
 }
@@ -479,8 +510,7 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 
 func (p *Parser) peekError(ExpectedToken token.TokenType) {
 	var epm string
-	k := p.l.PosG - p.l.CurrentLineStart
-	i := k - len(p.curToken.Literal)
+	i := p.l.AtCharNumFromCurrentLine - len(p.curToken.Literal)
 	for i > 0 {
 		epm += "-"
 		i -= 1
@@ -490,9 +520,9 @@ func (p *Parser) peekError(ExpectedToken token.TokenType) {
 	}
 	var erMess string
 	if ExpectedToken == token.ILLEGAL {
-		erMess = fmt.Sprint("Encountered illegal token ", p.curToken.Literal, " at line ", p.l.CurrentLine)
+		erMess = fmt.Sprint("Encountered illegal token ", p.curToken.Literal, " at line ", p.curLineNum)
 	} else {
-		erMess = fmt.Sprint("\n", "Expected ' ", ExpectedToken, " ' at line ", p.l.CurrentLine)
+		erMess = fmt.Sprint("\n", "Expected ' ", ExpectedToken, " ' at line ", p.curLineNum)
 	}
 	pErr := parseError{
 		errStr:            strings.ReplaceAll(p.l.ReadErrorLine(), "\t", " "),
@@ -504,4 +534,22 @@ func (p *Parser) peekError(ExpectedToken token.TokenType) {
 
 func (p *Parser) GetErrors() []parseError {
 	return p.errors
+}
+
+func (p *Parser) GetErrorsStr() []string {
+	var eMsgs []string
+	for _, msg := range p.errors {
+		fmt.Println(msg.errMessage)
+		fmt.Println(msg.errStr)
+		fmt.Println(msg.errPositionMarker)
+		var eMsg bytes.Buffer
+		eMsg.WriteString(msg.errMessage)
+		eMsg.WriteString("\n")
+		eMsg.WriteString(msg.errStr)
+		eMsg.WriteString("\n")
+		eMsg.WriteString(msg.errPositionMarker)
+		eMsg.WriteString("\n")
+		eMsgs = append(eMsgs, eMsg.String())
+	}
+	return eMsgs
 }

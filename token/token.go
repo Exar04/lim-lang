@@ -64,9 +64,10 @@ const (
 	FALSE    = "FALSE"
 	IF       = "IF"
 	// IFELSE   = "IFELSE"
-	ELSE   = "ELSE"
-	RETURN = "RETURN"
-	NULL   = "NULL"
+	ELSE      = "ELSE"
+	RETURN    = "RETURN"
+	NULL      = "NULL"
+	ENDOFLINE = "ENDOFLINE"
 
 	PRINT = "PRINT"
 )

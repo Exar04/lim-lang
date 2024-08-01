@@ -23,7 +23,8 @@ func checkParserErrors(t *testing.T, p *Parser) {
 }
 
 func TestIntStatements(t *testing.T) {
-	input := `int x = 5;
+	input := `
+	int x = 5;
     int foobar = 838383;
 	int diss = -8 * -(4 + 4);
    `
@@ -181,6 +182,6 @@ func TestIfStatement(t *testing.T) {
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
-	// checkParserErrors(t, p)
+	checkParserErrors(t, p)
 	fmt.Println(program)
 }
