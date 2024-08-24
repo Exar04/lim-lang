@@ -12,20 +12,16 @@ const (
 	EOF     = "EOF"
 
 	// Identifiers + literals
-	IDENT          = "IDENT"         // add, foobar, x, y, ...
-	Keywork_INT    = "Keywork_INT"   // 1343456
-	Keywork_FLOAT  = "Keywork_FLOAT" // 12.34
-	Keywork_BOOL   = "Keywork_BOOL"  // true, false
-	Keywork_STRING = "Keywork_STRING"
+	IDENT          = "IDENT"          // add, foobar, x, y, ...
+	Keyword_INT    = "Keyword_INT"    // 1343456
+	Keyword_FLOAT  = "Keyword_FLOAT"  // 12.34
+	Keyword_BOOL   = "Keyword_BOOL"   // true, false
+	Keyword_STRING = "Keyword_STRING" // "lala la la la"
 
 	INT    = "INT"
 	FLOAT  = "FLOAT"
 	BOOL   = "BOOL"
 	STRING = "STRING"
-
-	// Value_INT    = "Value_INT"
-	// Value_FLOAT  = "Value_FLOAT"
-	// Value_STRING = "Value_STRING"
 
 	// Operators
 	ASSIGN   = "="
@@ -34,6 +30,11 @@ const (
 	BANG     = "!"
 	ASTERISK = "*"
 	SLASH    = "/"
+	MODULUS  = "%"
+
+	// Bitwise Operators
+	BITWISE_AND = "&"
+	BITWISE_OR  = "|"
 
 	LT     = "<"
 	GT     = ">"
@@ -41,6 +42,8 @@ const (
 	GTEQ   = ">="
 	EQ     = "=="
 	NOT_EQ = "!="
+	OR     = "||"
+	AND    = "&&"
 
 	ADD_ASSIGN = "+="
 	SUB_ASSIGN = "-="
@@ -51,25 +54,35 @@ const (
 	// Delimiters
 	COMMA     = ","
 	SEMICOLON = ";"
+	COLON     = ":"
+
+	PERIOD = "."
+	ARROW  = "->"
+	DEFINE = ":="
 
 	LPAREN = "("
 	RPAREN = ")"
 	LBRACE = "{"
 	RBRACE = "}"
+	LBRACK = "["
+	RBRACK = "]"
 
 	// Keywords
-	FUNCTION = "FUNCTION"
-	CONST    = "CONST"
-	TRUE     = "TRUE"
-	FALSE    = "FALSE"
-	IF       = "IF"
-	// IFELSE   = "IFELSE"
+	FUNCTION  = "FUNCTION"
+	CONST     = "CONST"
+	TRUE      = "TRUE"
+	FALSE     = "FALSE"
+	IF        = "IF"
 	ELSE      = "ELSE"
 	RETURN    = "RETURN"
 	NULL      = "NULL"
 	ENDOFLINE = "ENDOFLINE"
+	STRUCT    = "STRUCT"
+	// BREAK     = "BREAK"
+	// CONTINUE  = "CONTINUE"
+	// FOR = "FOR"
 
-	PRINT = "PRINT"
+	// PRINT = "PRINT"
 )
 
 var keywords = map[string]TokenType{
@@ -82,16 +95,14 @@ var keywords = map[string]TokenType{
 	"const":  CONST,
 	"null":   NULL,
 
-	"int":    Keywork_INT,
-	"bool":   Keywork_BOOL,
-	"float":  Keywork_FLOAT,
-	"string": Keywork_STRING,
+	"int":    Keyword_INT,
+	"bool":   Keyword_BOOL,
+	"float":  Keyword_FLOAT,
+	"string": Keyword_STRING,
 
-	// "int":    INT,
-	// "bool":   BOOL,
-	// "float":  FLOAT,
-	// "string": STRING,
-	"print": PRINT,
+	"struct": STRUCT,
+
+	// "print": PRINT,
 }
 
 func LookupIdent(ident string) TokenType {

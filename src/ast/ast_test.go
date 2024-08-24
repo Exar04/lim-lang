@@ -1,11 +1,12 @@
 package ast
 
 import (
-	"lim-lang/token"
 	"testing"
+
+	"limLang/token"
 )
 
-func TestIntStatement(t *testing.T) {
+func TestString(t *testing.T) {
 	program := &Program{
 		Statements: []Statement{
 			&IntStatement{
@@ -21,9 +22,7 @@ func TestIntStatement(t *testing.T) {
 			},
 		},
 	}
-	// fmt.Println(program.Statements[0])
-
-	if program.String() != "int myVar = anotherVar;" {
+	if program.String() != "int myVar =  anotherVar" {
 		t.Errorf("program.String() wrong. got=%q", program.String())
 	}
 }

@@ -86,17 +86,6 @@ func testIntStatement(t *testing.T, s ast.Statement, name string) bool {
 }
 
 func TestReturnStatement(t *testing.T) {
-	// 	input := `
-	// 	return 4;
-	// 	return dataVar;
-	// 	return 4*3+2;
-	//    `
-
-	// 	failingInput := `
-	// return int;
-	// return string;
-	// return -=/;
-	//    `
 	tests := []struct {
 		input         string
 		expectedValue interface{}

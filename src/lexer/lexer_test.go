@@ -1,55 +1,58 @@
 package lexer
 
 import (
-	"fmt"
-	"lim-lang/token"
-	"strings"
+	"limLang/token"
 	"testing"
 )
 
 func TestNextToken(t *testing.T) {
 
-	nextTokenVariableInitilization(t)
+	// nextTokenVariableInitilization(t)
 	nextTokenIfStatement(t)
 	nextTokenFn(t)
 	nextTokenOperators(t)
 
-	CheckIllegalTok(t)
+	nextTokenConst(t)
+	nextTokenStruct(t)
+
+	// testIlligalName()
+	// testIlligalSymbol()
 }
 
-// This method is not working properly maybe instead of checking for illegal token errors in lexer i should just check them while parsing
-func CheckIllegalTok(t *testing.T) {
+func testIlligalSymbol() {
 	input := `int data;
-	int data = 35;
-	hehehheheh\
-	noss .
-	miso .
+	int data = 52;
+
+
+	\bool da\ta = false\
+
+	string data = "thisIsStr"\
 	`
 	l := New(input)
-	for l.position < len(l.input) {
-		tok := l.NextToken()
-		if tok.Type == token.ILLEGAL {
-
-			// fmt.Println()
-			fmt.Println(strings.ReplaceAll(l.ReadErrorLine(), "\t", " "))
-			// fmt.Println(strings.ReplaceAll(l.errLine, "\t", " "))
-			npl := l.illegalTokenPosition
-			// npl := l.CaluclateIllegleTokenPosition()
-			for npl > 0 {
-				fmt.Print("-")
-				npl -= 1
-			}
-			fmt.Print("^\n")
-
-			fmt.Println("Error : ", tok.Literal, tok.Type)
-		}
+	tok := l.NextToken()
+	for tok.Type != token.EOF {
+		tok = l.NextToken()
 	}
 }
 
-func nextTokenVariableInitilization(t *testing.T) {
+func testIlligalName() {
+	input := `
+	int data;
+
+	int 889dal = 3;
+	`
+	l := New(input)
+	tok := l.NextToken()
+	for tok.Type != token.EOF {
+		tok = l.NextToken()
+	}
+}
+
+func TestVariableInitilizationTokens(t *testing.T) {
 	input := `int data;
 	int data = 52;
-	bool data = false;	
+	int da42 = 2;
+	bool data = false;
 	string data = "thisIsStr";
 	`
 
@@ -58,30 +61,34 @@ func nextTokenVariableInitilization(t *testing.T) {
 		expectedLiteral string
 	}{
 		// int data;
-		{token.Keywork_INT, "int"},
+		{token.Keyword_INT, "int"},
 		{token.IDENT, "data"},
 		{token.SEMICOLON, ";"},
+		{token.ENDOFLINE, "\n"},
 
 		// int data = 52;
-		{token.Keywork_INT, "int"},
+		{token.Keyword_INT, "int"},
 		{token.IDENT, "data"},
 		{token.ASSIGN, "="},
 		{token.INT, "52"},
 		{token.SEMICOLON, ";"},
+		{token.ENDOFLINE, "\n"},
 
 		// bool data = false;
-		{token.Keywork_BOOL, "bool"},
+		{token.Keyword_BOOL, "bool"},
 		{token.IDENT, "data"},
 		{token.ASSIGN, "="},
 		{token.FALSE, "false"},
 		{token.SEMICOLON, ";"},
+		{token.ENDOFLINE, "\n"},
 
 		// string data = "thisIsStr";
-		{token.Keywork_STRING, "string"},
+		{token.Keyword_STRING, "string"},
 		{token.IDENT, "data"},
 		{token.ASSIGN, "="},
 		{token.STRING, "thisIsStr"},
 		{token.SEMICOLON, ";"},
+		{token.ENDOFLINE, "\n"},
 	}
 	l := New(input)
 
@@ -99,8 +106,7 @@ func nextTokenVariableInitilization(t *testing.T) {
 }
 
 func nextTokenIfStatement(t *testing.T) {
-	input := `
-	if 5 < 10 {
+	input := `if 5 < 10 {
 		return true
 	} else if{
 		return true 
@@ -117,22 +123,29 @@ func nextTokenIfStatement(t *testing.T) {
 		{token.LT, "<"},
 		{token.INT, "10"},
 		{token.LBRACE, "{"},
+		{token.ENDOFLINE, "\n"},
 		{token.RETURN, "return"},
 		{token.TRUE, "true"},
+		{token.ENDOFLINE, "\n"},
 		{token.RBRACE, "}"},
 
 		{token.ELSE, "else"},
 		{token.IF, "if"},
 		{token.LBRACE, "{"},
+		{token.ENDOFLINE, "\n"},
 		{token.RETURN, "return"},
 		{token.TRUE, "true"},
+		{token.ENDOFLINE, "\n"},
 		{token.RBRACE, "}"},
 
 		{token.ELSE, "else"},
 		{token.LBRACE, "{"},
+		{token.ENDOFLINE, "\n"},
 		{token.RETURN, "return"},
 		{token.FALSE, "false"},
+		{token.ENDOFLINE, "\n"},
 		{token.RBRACE, "}"},
+		{token.ENDOFLINE, "\n"},
 	}
 	l := New(input)
 
@@ -150,12 +163,7 @@ func nextTokenIfStatement(t *testing.T) {
 }
 
 func nextTokenFn(t *testing.T) {
-	input := `
-	fn printNum(){
-		int data = 54;
-		print(data);
-	}
-	`
+	input := `fn printNum(){ int data = 54; }`
 	tests := []struct {
 		expectedType    token.TokenType
 		expectedLiteral string
@@ -165,15 +173,10 @@ func nextTokenFn(t *testing.T) {
 		{token.LPAREN, "("},
 		{token.RPAREN, ")"},
 		{token.LBRACE, "{"},
-		{token.Keywork_INT, "int"},
+		{token.Keyword_INT, "int"},
 		{token.IDENT, "data"},
 		{token.ASSIGN, "="},
 		{token.INT, "54"},
-		{token.SEMICOLON, ";"},
-		{token.PRINT, "print"},
-		{token.LPAREN, "("},
-		{token.IDENT, "data"},
-		{token.RPAREN, ")"},
 		{token.SEMICOLON, ";"},
 		{token.RBRACE, "}"},
 	}
@@ -193,10 +196,8 @@ func nextTokenFn(t *testing.T) {
 }
 
 func nextTokenOperators(t *testing.T) {
-	input := `
-	!-/*5
+	input := `!-/*7
    	5 < 10 > 5
-
 	10 <= 10
 	10 >= 10
 	10 == 10
@@ -210,29 +211,35 @@ func nextTokenOperators(t *testing.T) {
 		{token.MINUS, "-"},
 		{token.SLASH, "/"},
 		{token.ASTERISK, "*"},
-		{token.INT, "5"},
+		{token.INT, "7"},
+		{token.ENDOFLINE, "\n"},
 
 		{token.INT, "5"},
 		{token.LT, "<"},
 		{token.INT, "10"},
 		{token.GT, ">"},
 		{token.INT, "5"},
+		{token.ENDOFLINE, "\n"},
 
 		{token.INT, "10"},
 		{token.LTEQ, "<="},
 		{token.INT, "10"},
+		{token.ENDOFLINE, "\n"},
 
 		{token.INT, "10"},
 		{token.GTEQ, ">="},
 		{token.INT, "10"},
+		{token.ENDOFLINE, "\n"},
 
 		{token.INT, "10"},
 		{token.EQ, "=="},
 		{token.INT, "10"},
+		{token.ENDOFLINE, "\n"},
 
 		{token.INT, "10"},
 		{token.NOT_EQ, "!="},
 		{token.INT, "9"},
+		{token.ENDOFLINE, "\n"},
 	}
 	l := New(input)
 
@@ -250,15 +257,18 @@ func nextTokenOperators(t *testing.T) {
 }
 
 func nextTokenConst(t *testing.T) {
-	input := `
-	const int data = 4;
-	`
+	input := `const int data = 4;`
 
 	tests := []struct {
 		expectedType    token.TokenType
 		expectedLiteral string
 	}{
 		{token.CONST, "const"},
+		{token.Keyword_INT, "int"},
+		{token.IDENT, "data"},
+		{token.ASSIGN, "="},
+		{token.INT, "4"},
+		{token.SEMICOLON, ";"},
 	}
 	l := New(input)
 
@@ -299,4 +309,84 @@ func nextTokenPointers(t *testing.T) {
 				i, tt.expectedLiteral, tok.Literal)
 		}
 	}
+}
+
+func nextTokenStruct(t *testing.T) {
+	input := `
+    struct student {
+        name string
+        age int
+        isAlive bool
+    }`
+	tests := []struct {
+		expectedType    token.TokenType
+		expectedLiteral string
+	}{
+		{token.ENDOFLINE, "\n"},
+		{token.STRUCT, "struct"},
+		{token.IDENT, "student"},
+		{token.LBRACE, "{"},
+		{token.ENDOFLINE, "\n"},
+		{token.IDENT, "name"},
+		{token.Keyword_STRING, "string"},
+		{token.ENDOFLINE, "\n"},
+		{token.IDENT, "age"},
+		{token.Keyword_INT, "int"},
+		{token.ENDOFLINE, "\n"},
+		{token.IDENT, "isAlive"},
+		{token.Keyword_BOOL, "bool"},
+		{token.ENDOFLINE, "\n"},
+		{token.RBRACE, "}"},
+	}
+	l := New(input)
+
+	for i, tt := range tests {
+		tok := l.NextToken()
+		if tok.Type != tt.expectedType {
+			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
+				i, tt.expectedType, tok.Type)
+		}
+		if tok.Literal != tt.expectedLiteral {
+			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
+				i, tt.expectedLiteral, tok.Literal)
+		}
+	}
+}
+
+func TestComments(t *testing.T) {
+	input := `
+	// this is the single line comment
+	int /* Inline comment */data
+	/*
+	This is
+	multiline comment
+	*/
+	int nData`
+	tests := []struct {
+		expectedType    token.TokenType
+		expectedLiteral string
+	}{
+		{token.ENDOFLINE, "\n"},
+		{token.ENDOFLINE, "\n"},
+		{token.Keyword_INT, "int"},
+		{token.IDENT, "data"},
+		{token.ENDOFLINE, "\n"},
+		{token.ENDOFLINE, "\n"},
+		{token.Keyword_INT, "int"},
+		{token.IDENT, "nData"},
+	}
+	l := New(input)
+
+	for i, tt := range tests {
+		tok := l.NextToken()
+		if tok.Type != tt.expectedType {
+			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
+				i, tt.expectedType, tok.Type)
+		}
+		if tok.Literal != tt.expectedLiteral {
+			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
+				i, tt.expectedLiteral, tok.Literal)
+		}
+	}
+
 }

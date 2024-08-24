@@ -3,13 +3,14 @@ package ast
 import (
 	"bytes"
 	"fmt"
-	"lim-lang/token"
+	"limLang/token"
 	"strings"
 )
 
 type Node interface {
 	TokenLiteral() string
 	String() string
+	GetTreeFormat() string
 }
 type Expression interface {
 	Node
@@ -38,7 +39,13 @@ func (p *Program) String() string {
 	for _, s := range p.Statements {
 		out.WriteString(s.String())
 	}
-
+	return out.String()
+}
+func (p *Program) GetTreeFormat() string {
+	var out bytes.Buffer
+	for _, s := range p.Statements {
+		out.WriteString(s.GetTreeFormat())
+	}
 	return out.String()
 }
 
@@ -52,8 +59,10 @@ func (i *Identifier) expressionNode() {}
 func (i *Identifier) TokenLiteral() string {
 	return i.Token.Literal
 }
+func (i *Identifier) GetTreeFormat() string { return "" }
 func (i *Identifier) String() string {
-	str := fmt.Sprintf("%s %s", i.HoldsVarType.Literal, i.TokenLiteral())
+	var str string
+	str = fmt.Sprintf("%s %s", i.HoldsVarType.Literal, i.TokenLiteral())
 
 	return str
 }
@@ -64,20 +73,18 @@ type IntStatement struct {
 	Value Expression
 }
 
-func (is *IntStatement) expressionNode() {}
-func (is *IntStatement) statementNode()  {}
-func (is *IntStatement) TokenLiteral() string {
-	return is.Token.Literal
-}
+func (is *IntStatement) expressionNode()       {}
+func (is *IntStatement) statementNode()        {}
+func (is *IntStatement) TokenLiteral() string  { return is.Token.Literal }
+func (is *IntStatement) GetTreeFormat() string { return "" }
 func (is *IntStatement) String() string {
 	var out bytes.Buffer
 	out.WriteString(is.TokenLiteral())
 	out.WriteString(is.Name.String())
-	out.WriteString("= ")
+	out.WriteString(" = ")
 	if is.Value != nil {
 		out.WriteString(is.Value.String())
 	}
-	// out.WriteString(";")
 	return out.String()
 }
 
@@ -86,41 +93,10 @@ type IntegerLiteral struct {
 	Value int64
 }
 
-func (il *IntegerLiteral) expressionNode()      {}
-func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
-func (il *IntegerLiteral) String() string       { return il.Token.Literal }
-
-type BoolStatement struct {
-	Token token.Token // token.BOOL
-	Name  *Identifier
-	Value Expression
-}
-
-func (is *BoolStatement) expressionNode() {}
-func (is *BoolStatement) statementNode()  {}
-func (is *BoolStatement) TokenLiteral() string {
-	return is.Token.Literal
-}
-func (is *BoolStatement) String() string {
-	var out bytes.Buffer
-	out.WriteString(is.TokenLiteral())
-	out.WriteString(is.Name.String())
-	out.WriteString("= ")
-	if is.Value != nil {
-		out.WriteString(is.Value.String())
-	}
-	// out.WriteString(";")
-	return out.String()
-}
-
-type Boolean struct {
-	Token token.Token
-	Value bool
-}
-
-func (b *Boolean) expressionNode()      {}
-func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
-func (b *Boolean) String() string       { return b.Token.Literal }
+func (il *IntegerLiteral) expressionNode()       {}
+func (il *IntegerLiteral) TokenLiteral() string  { return il.Token.Literal }
+func (il *IntegerLiteral) String() string        { return il.Token.Literal }
+func (il *IntegerLiteral) GetTreeFormat() string { return il.Token.Literal }
 
 type ReturnStatement struct {
 	Token       token.Token // the 'return' token
@@ -137,11 +113,9 @@ func (rs *ReturnStatement) String() string {
 	if rs.ReturnValue != nil {
 		out.WriteString(rs.ReturnValue.String())
 	}
-
-	// out.WriteString(";")
-
 	return out.String()
 }
+func (rs *ReturnStatement) GetTreeFormat() string { return "" }
 
 type ExpressionStatement struct {
 	Token      token.Token
@@ -156,6 +130,7 @@ func (es *ExpressionStatement) String() string {
 	}
 	return ""
 }
+func (es *ExpressionStatement) GetTreeFormat() string { return "" }
 
 type PrefixExpression struct {
 	Token    token.Token // The prefix token, e.g. !
@@ -175,6 +150,7 @@ func (pe *PrefixExpression) String() string {
 
 	return out.String()
 }
+func (pe *PrefixExpression) GetTreeFormat() string { return "" }
 
 type InfixExpression struct {
 	Token    token.Token // The operator token, e.g. +
@@ -183,27 +159,39 @@ type InfixExpression struct {
 	Right    Expression
 }
 
-func (oe *InfixExpression) expressionNode()      {}
-func (oe *InfixExpression) TokenLiteral() string { return oe.Token.Literal }
-func (oe *InfixExpression) String() string {
+func (ie *InfixExpression) expressionNode()      {}
+func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *InfixExpression) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("(")
-	out.WriteString(oe.Left.String())
-	out.WriteString(" " + oe.Operator + " ")
-	out.WriteString(oe.Right.String())
+	out.WriteString(ie.Left.String())
+	out.WriteString(" " + ie.Operator + " ")
+	out.WriteString(ie.Right.String())
 	out.WriteString(")")
 
 	return out.String()
 }
+func (ie *InfixExpression) GetTreeFormat() string { return "" }
+
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (b *Boolean) expressionNode()       {}
+func (b *Boolean) TokenLiteral() string  { return b.Token.Literal }
+func (b *Boolean) String() string        { return b.Token.Literal }
+func (b *Boolean) GetTreeFormat() string { return "" }
 
 type BlockStatement struct {
 	Token      token.Token // the { token
 	Statements []Statement
 }
 
-func (bs *BlockStatement) statementNode()       {}
-func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
+func (bs *BlockStatement) statementNode()        {}
+func (bs *BlockStatement) TokenLiteral() string  { return bs.Token.Literal }
+func (bs *BlockStatement) GetTreeFormat() string { return "" }
 func (bs *BlockStatement) String() string {
 	var out bytes.Buffer
 	for _, s := range bs.Statements {
@@ -221,8 +209,9 @@ type IfStatement struct {
 }
 
 // func (ie *IfExpression) expressionNode()      {}
-func (is *IfStatement) statementNode()       {}
-func (is *IfStatement) TokenLiteral() string { return is.Token.Literal }
+func (is *IfStatement) statementNode()        {}
+func (is *IfStatement) TokenLiteral() string  { return is.Token.Literal }
+func (is *IfStatement) GetTreeFormat() string { return "" }
 func (is *IfStatement) String() string {
 	var out bytes.Buffer
 	isRootNode := true
@@ -266,8 +255,9 @@ type FunctionStatement struct {
 }
 
 // func (fl *FunctionLiteral) expressionNode()      {}
-func (fl *FunctionStatement) statementNode()       {}
-func (fl *FunctionStatement) TokenLiteral() string { return fl.Token.Literal }
+func (fl *FunctionStatement) statementNode()        {}
+func (fl *FunctionStatement) TokenLiteral() string  { return fl.Token.Literal }
+func (fl *FunctionStatement) GetTreeFormat() string { return "" }
 func (fl *FunctionStatement) String() string {
 	var out bytes.Buffer
 
@@ -297,8 +287,9 @@ type CallExpression struct {
 	Arguments []Expression
 }
 
-func (ce *CallExpression) expressionNode()      {}
-func (ce *CallExpression) TokenLiteral() string { return ce.Token.Literal }
+func (ce *CallExpression) expressionNode()       {}
+func (ce *CallExpression) TokenLiteral() string  { return ce.Token.Literal }
+func (ce *CallExpression) GetTreeFormat() string { return "" }
 func (ce *CallExpression) String() string {
 	var out bytes.Buffer
 
@@ -312,5 +303,63 @@ func (ce *CallExpression) String() string {
 	out.WriteString(strings.Join(args, ", "))
 	out.WriteString(")")
 
+	return out.String()
+}
+
+type BoolStatement struct {
+	Token token.Token // token.BOOL
+	Name  *Identifier
+	Value Expression
+}
+
+func (is *BoolStatement) expressionNode()       {}
+func (is *BoolStatement) statementNode()        {}
+func (is *BoolStatement) GetTreeFormat() string { return "" }
+func (is *BoolStatement) TokenLiteral() string {
+	return is.Token.Literal
+}
+func (is *BoolStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(is.TokenLiteral())
+	out.WriteString(is.Name.String())
+	out.WriteString("= ")
+	if is.Value != nil {
+		out.WriteString(is.Value.String())
+	}
+	// out.WriteString(";")
+	return out.String()
+}
+
+type StringVal struct {
+	Token token.Token
+	Value string
+}
+
+func (s *StringVal) expressionNode()       {}
+func (s *StringVal) TokenLiteral() string  { return s.Token.Literal }
+func (s *StringVal) String() string        { return s.Value }
+func (s *StringVal) GetTreeFormat() string { return "" }
+
+type StringStatement struct {
+	Token token.Token // token.STRING
+	Name  *Identifier
+	Value Expression
+}
+
+func (ss *StringStatement) expressionNode()       {}
+func (ss *StringStatement) statementNode()        {}
+func (ss *StringStatement) GetTreeFormat() string { return "" }
+func (ss *StringStatement) TokenLiteral() string {
+	return ss.Token.Literal
+}
+func (ss *StringStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(ss.TokenLiteral())
+	out.WriteString(ss.Name.String())
+	out.WriteString("= ")
+	if ss.Value != nil {
+		out.WriteString(ss.Value.String())
+	}
+	// out.WriteString(";")
 	return out.String()
 }
