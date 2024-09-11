@@ -73,6 +73,7 @@ func TestStringStatements(t *testing.T) {
 	string a = "data"
 	string b = "data 2";
 	string c = "l2"
+	string diss = "Hello"+"World";
 	`
 	l := lexer.New(input)
 	p := New(l)
@@ -275,20 +276,65 @@ func TestFunctionLiteralParsing(t *testing.T) {
 func TestCallExpression(t *testing.T) {
 	input := `
 	add(3*3+2,Ani)
+	sub(ali(b), bli(a))
 	`
 
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
-	if len(program.Statements) != 1 {
+	if len(program.Statements) != 2 {
 		t.Fatalf("program.Body does not contain %d statements. got=%d\n",
-			1, len(program.Statements))
+			2, len(program.Statements))
 	}
 
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	stmt1, ok := program.Statements[0].(*ast.ExpressionStatement)
+	stmt2, ok := program.Statements[1].(*ast.ExpressionStatement)
 
 	if !ok {
 		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
 	}
-	fmt.Println(stmt)
+	fmt.Println(stmt1)
+	fmt.Println(stmt2)
+}
+
+func TestParsingArray(t *testing.T) {
+	// input := "int arr = [1, 2 * 2, 3 + 3]"
+	// input := "int []arr = {1, 2 * 2, 3 + 3}"
+	// l := lexer.New(input)
+	// p := New(l)
+	// program := p.ParseProgram()
+	// stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	// array, ok := stmt.Expression.(*ast.ArrayLiteral)
+	// if !ok {
+	// 	t.Fatalf("exp not ast.ArrayLiteral. got=%T", stmt.Expression)
+	// }
+	// if len(array.Elements) != 3 {
+	// 	t.Fatalf("len(array.Elements) not 3. got=%d", len(array.Elements))
+	// }
+}
+
+// structs are not yet supported
+func TestStruct(t *testing.T) {
+	// input := `
+	// struct student {
+	// 	name string
+	// 	age int
+	// 	gender bool
+	// }
+	// `
+
+	// l := lexer.New(input)
+	// p := New(l)
+	// program := p.ParseProgram()
+	// if len(program.Statements) != 1 {
+	// 	t.Fatalf("program.Body does not contain %d statements. got=%d\n",
+	// 		1, len(program.Statements))
+	// }
+
+	// stmt1, ok := program.Statements[0].(*ast.ExpressionStatement)
+
+	// if !ok {
+	// 	t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+	// }
+	// fmt.Println(stmt1)
 }

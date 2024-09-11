@@ -178,6 +178,10 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LBRACE, l.ch)
 	case '}':
 		tok = newToken(token.RBRACE, l.ch)
+	case '[':
+		tok = newToken(token.LBRACK, l.ch)
+	case ']':
+		tok = newToken(token.RBRACK, l.ch)
 	case '\n':
 		tok = newToken(token.ENDOFLINE, l.ch)
 	case '"':

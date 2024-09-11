@@ -86,6 +86,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFns[token.TRUE] = p.parseBoolean
 	p.prefixParseFns[token.FALSE] = p.parseBoolean
 	p.prefixParseFns[token.LPAREN] = p.parseGroupedExpression
+	p.prefixParseFns[token.STRING] = p.parseStringLiteral
+	// p.prefixParseFns[token.LBRACK] = p.parseArrayLiteral
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.infixParseFns[token.PLUS] = p.parseInfixExpression
@@ -120,6 +122,9 @@ func (p *Parser) parseStatement() ast.Statement {
 	}
 	switch p.curToken.Type {
 	case token.Keyword_INT:
+		// if p.peekToken.Type == token.LBRACK {
+		// 	return p.parseArrayLiteral()
+		// }
 		return p.parseIntStatement()
 	case token.Keyword_BOOL:
 		return p.parseBoolStatement()
@@ -184,6 +189,10 @@ func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
+func (p *Parser) parseStringLiteral() ast.Expression {
+	return &ast.StringVal{Token: p.curToken, Value: p.curToken.Literal}
+}
+
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
@@ -199,6 +208,29 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	return lit
 }
 
+//	func (p *Parser) parseArrayLiteral() *ast.ArrayStatement {
+//		array := &ast.ArrayLiteral{Token: p.curToken}
+//		array.Elements = p.parseExpressionList(token.RBRACK)
+//		return array
+//	}
+func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
+	list := []ast.Expression{}
+	if p.peekTokenIs(end) {
+		p.nextToken()
+		return list
+	}
+	p.nextToken()
+	list = append(list, p.parseExpression(LOWEST))
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		list = append(list, p.parseExpression(LOWEST))
+	}
+	if !p.expectPeek(end) {
+		return nil
+	}
+	return list
+}
 func (p *Parser) parseIntStatement() *ast.IntStatement {
 	stmt := &ast.IntStatement{Token: p.curToken}
 	if !p.expectPeek(token.IDENT) {
@@ -254,7 +286,7 @@ func (p *Parser) parseStringStatement() *ast.StringStatement {
 		return nil
 	}
 	p.nextToken()
-	stmt.Value = &ast.StringVal{Token: token.Token{Type: token.STRING, Literal: "string"}, Value: p.curToken.Literal}
+	stmt.Value = p.parseExpression(LOWEST)
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}

@@ -3,17 +3,19 @@ package object
 import (
 	"bytes"
 	"fmt"
-	"lim-lang/ast"
+	"limLang/ast"
 	"strings"
 )
 
 const (
 	INTEGER_OBJ      = "INTEGER"
 	BOOLEAN_OBJ      = "BOOLEAN"
+	STRING_OBJ       = "STRING"
 	NULL_OBJ         = "NULL"
-	RETURN_VALUE_OBJ = "RETURN_VALUE"
-	ERROR_OBJ        = "ERROR"
 	FUNCTION_OBJ     = "FUNCTION"
+	RETURN_VALUE_OBJ = "RETURN_VALUE"
+	BUILTIN_OBJ      = "BUILTIN"
+	ERROR_OBJ        = "ERROR"
 )
 
 type ObjectType string
@@ -30,13 +32,6 @@ type Error struct {
 func (e *Error) Type() ObjectType { return ERROR_OBJ }
 func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
 
-type ReturnValue struct {
-	Value Object
-}
-
-func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
-func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
-
 type Integer struct {
 	Value int64
 }
@@ -51,15 +46,32 @@ type Boolean struct {
 func (b *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
 func (b *Boolean) Inspect() string  { return fmt.Sprintf("%t", b.Value) }
 
+type String struct {
+	Value string
+}
+
+func (s *String) Type() ObjectType { return STRING_OBJ }
+func (s *String) Inspect() string  { return fmt.Sprintf("%s", s.Value) }
+
 type Null struct{}
 
 func (n *Null) Type() ObjectType { return NULL_OBJ }
 func (n *Null) Inspect() string  { return "null" }
 
+type ReturnValue struct {
+	Value Object
+}
+
+func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
+func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
+
 type Function struct {
 	Parameters []*ast.Identifier
 	Body       *ast.BlockStatement
 	Env        *Environment
+
+	FuncName string
+	// ReturnType Object
 }
 
 func (f *Function) Type() ObjectType { return FUNCTION_OBJ }
@@ -71,8 +83,9 @@ func (f *Function) Inspect() string {
 		params = append(params, p.String())
 	}
 
-	out.WriteString("fn")
-	out.WriteString("(")
+	out.WriteString("fn ")
+	out.WriteString(f.FuncName)
+	out.WriteString(" (")
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") {\n")
 	out.WriteString(f.Body.String())
@@ -81,8 +94,10 @@ func (f *Function) Inspect() string {
 	return out.String()
 }
 
-func NewEnclosedEnviornment(outer *Environment) *Environment {
-	env := NewEnvironment()
-	env.outer = outer
-	return env
+type BuiltinFunction func(args ...Object) Object
+type Builtin struct {
+	Fn BuiltinFunction
 }
+
+func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
+func (b *Builtin) Inspect() string  { return "builtin function" }
