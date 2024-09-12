@@ -26,7 +26,7 @@ var buildtins = map[string]*object.Builtin{
 	"print": &object.Builtin{
 		Fn: func(args ...object.Object) object.Object {
 			for _, arg := range args {
-				fmt.Print(arg)
+				fmt.Print(arg.Inspect())
 			}
 			return nil
 		},
