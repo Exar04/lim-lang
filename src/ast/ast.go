@@ -365,11 +365,14 @@ func (ss *StringStatement) String() string {
 }
 
 type ArrayLiteral struct {
-	Token    token.Token
+	Token    token.Token // ARRAY token
+	Name     *Identifier
+	Type     token.Token
 	Elements []Expression
 }
 
 func (al *ArrayLiteral) expressionNode()       {}
+func (ss *ArrayLiteral) statementNode()        {}
 func (al *ArrayLiteral) TokenLiteral() string  { return al.Token.Literal }
 func (al *ArrayLiteral) GetTreeFormat() string { return "" }
 func (al *ArrayLiteral) String() string {
@@ -381,5 +384,27 @@ func (al *ArrayLiteral) String() string {
 	out.WriteString("[")
 	out.WriteString(strings.Join(elements, ", "))
 	out.WriteString("]")
+	return out.String()
+}
+
+type IndexExpression struct {
+	Token token.Token // the [ token
+	Ident *Identifier
+	Index Expression
+}
+
+func (ie *IndexExpression) expressionNode()       {}
+func (ss *IndexExpression) statementNode()        {}
+func (al *IndexExpression) GetTreeFormat() string { return "" }
+func (ie *IndexExpression) TokenLiteral() string {
+	return ie.Token.Literal
+}
+func (ie *IndexExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("(")
+	out.WriteString(ie.Ident.String())
+	out.WriteString("[")
+	out.WriteString(ie.Index.String())
+	out.WriteString("])")
 	return out.String()
 }

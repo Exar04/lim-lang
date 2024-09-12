@@ -98,6 +98,33 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		env.Set(node.Name.Value, val)
 
+	case *ast.ArrayLiteral:
+		elements := evalExpressions(node.Elements, env)
+		if len(elements) == 1 && isError(elements[0]) {
+			return elements[0]
+		}
+		// this is where the problem is i think
+		// rn i am not saving array in env
+		arrElems := &object.Array{Elements: elements}
+		env.Set(node.Name.Value, arrElems)
+		// return &object.Array{Elements: elements}
+
+	case *ast.IndexExpression:
+		ident := Eval(node.Ident, env)
+		if isError(ident) {
+			return ident
+		}
+		elems, ok := ident.(*object.Array)
+		if !ok {
+			return elems
+		}
+
+		index := Eval(node.Index, env)
+		if isError(index) {
+			return index
+		}
+		fmt.Println("wtf : ", elems.Elements[0], index)
+		return evalIndexExpression(elems, index)
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
 
@@ -118,6 +145,26 @@ func evalProgram(program *ast.Program, env *object.Environment) object.Object {
 		}
 	}
 	return result
+}
+
+func evalIndexExpression(ident, index object.Object) object.Object {
+	switch {
+	case ident.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+		return evalArrayIndexExpression(ident, index)
+	default:
+		return newError("index operator not supported: %s", ident.Type())
+	}
+}
+
+func evalArrayIndexExpression(arr, index object.Object) object.Object {
+	arrObject := arr.(*object.Array)
+	idx := index.(*object.Integer).Value
+	max := int64(len(arrObject.Elements) - 1)
+
+	if idx < 0 || idx > max {
+		return NULL
+	}
+	return arrObject.Elements[idx]
 }
 
 func evalExpressions(exps []ast.Expression, env *object.Environment) []object.Object {

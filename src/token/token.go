@@ -67,6 +67,8 @@ const (
 	LBRACK = "["
 	RBRACK = "]"
 
+	ARRAY = "ARRAY"
+
 	// Keywords
 	FUNCTION  = "FUNCTION"
 	CONST     = "CONST"

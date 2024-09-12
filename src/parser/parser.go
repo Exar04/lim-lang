@@ -122,9 +122,9 @@ func (p *Parser) parseStatement() ast.Statement {
 	}
 	switch p.curToken.Type {
 	case token.Keyword_INT:
-		// if p.peekToken.Type == token.LBRACK {
-		// 	return p.parseArrayLiteral()
-		// }
+		if p.peekToken.Type == token.LBRACK {
+			return p.parseArrayLiteral()
+		}
 		return p.parseIntStatement()
 	case token.Keyword_BOOL:
 		return p.parseBoolStatement()
@@ -139,6 +139,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.IDENT:
 		if p.peekToken.Type == token.DEFINE {
 			return p.parseDefineStatement()
+		} else if p.peekToken.Type == token.LBRACK {
+			return p.parseIndexExpression()
 			// } else if p.peekToken.Type == token.ASSIGN {
 			// 	return p.parseReassignStatement()
 		}
@@ -208,11 +210,48 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	return lit
 }
 
-//	func (p *Parser) parseArrayLiteral() *ast.ArrayStatement {
-//		array := &ast.ArrayLiteral{Token: p.curToken}
-//		array.Elements = p.parseExpressionList(token.RBRACK)
-//		return array
-//	}
+func (p *Parser) parseIndexExpression() *ast.IndexExpression {
+	exp := &ast.IndexExpression{Token: p.curToken, Ident: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
+	p.nextToken()
+	p.nextToken()
+
+	exp.Index = p.parseExpression(LOWEST)
+	if !p.expectPeek(token.RBRACK) {
+		return nil
+	}
+	return exp
+}
+
+func (p *Parser) parseArrayLiteral() *ast.ArrayLiteral {
+	// int []arr = [1, 2 * 2, 3 + 3] // this is the structure of our array in lim lang
+	array := &ast.ArrayLiteral{Token: token.Token{Type: token.ARRAY, Literal: token.ARRAY}}
+	// now current token will be the statement type either int, bool, string or custome sturct type
+	array.Type = p.curToken
+
+	// now we will get [ paran next
+	if !p.expectPeek(token.LBRACK) {
+		return nil
+	}
+	// now we will get ] paran next
+	if !p.expectPeek(token.RBRACK) {
+		return nil
+	}
+
+	if !p.expectPeek(token.IDENT) {
+		return nil
+	}
+	array.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	if !p.expectPeek(token.ASSIGN) {
+		return nil
+	}
+	p.nextToken()
+
+	// now our current token is [ paran
+	array.Elements = p.parseExpressionList(token.RBRACK)
+	return array
+}
+
 func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
 	list := []ast.Expression{}
 	if p.peekTokenIs(end) {
@@ -220,6 +259,7 @@ func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
 		return list
 	}
 	p.nextToken()
+
 	list = append(list, p.parseExpression(LOWEST))
 	for p.peekTokenIs(token.COMMA) {
 		p.nextToken()
@@ -229,8 +269,10 @@ func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
 	if !p.expectPeek(end) {
 		return nil
 	}
+	// fmt.Println(p.curToken, p.peekToken)
 	return list
 }
+
 func (p *Parser) parseIntStatement() *ast.IntStatement {
 	stmt := &ast.IntStatement{Token: p.curToken}
 	if !p.expectPeek(token.IDENT) {
@@ -251,6 +293,7 @@ func (p *Parser) parseIntStatement() *ast.IntStatement {
 	}
 	return stmt
 }
+
 func (p *Parser) parseBoolStatement() *ast.BoolStatement {
 	stmt := &ast.BoolStatement{Token: p.curToken}
 	if !p.expectPeek(token.IDENT) {
@@ -520,6 +563,7 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	exp := &ast.CallExpression{Token: p.curToken, Function: function}
 	exp.Arguments = p.parseCallArguments()
+	// exp.Arguments = p.parseExpressionList(token.LPAREN)
 	return exp
 }
 

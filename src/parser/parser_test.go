@@ -298,19 +298,45 @@ func TestCallExpression(t *testing.T) {
 }
 
 func TestParsingArray(t *testing.T) {
-	// input := "int arr = [1, 2 * 2, 3 + 3]"
+	input := "int []arr = [1, 2 * 2, 3 + 3]"
 	// input := "int []arr = {1, 2 * 2, 3 + 3}"
-	// l := lexer.New(input)
-	// p := New(l)
-	// program := p.ParseProgram()
-	// stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	// array, ok := stmt.Expression.(*ast.ArrayLiteral)
-	// if !ok {
-	// 	t.Fatalf("exp not ast.ArrayLiteral. got=%T", stmt.Expression)
-	// }
-	// if len(array.Elements) != 3 {
-	// 	t.Fatalf("len(array.Elements) not 3. got=%d", len(array.Elements))
-	// }
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	stmt, ok := program.Statements[0].(*ast.ArrayLiteral)
+
+	if !ok {
+		t.Fatal("the data structure is not array list")
+	}
+	if stmt.Name.Value != "arr" {
+		t.Fatalf("Expected array name %s got=%s", "arr", stmt.Name.Value)
+	}
+	if stmt.Type.Type != token.Keyword_INT {
+		t.Fatalf("Expected array type %s got=%s", token.Keyword_INT, stmt.Type.Type)
+	}
+	if len(stmt.Elements) != 3 {
+		t.Fatalf("Expected %d values in array got=%d", 3, len(stmt.Elements))
+	}
+}
+
+func TestParsingIndexExpressions(t *testing.T) {
+	input := "myArray[1 + 1]"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	stmt, ok := program.Statements[0].(*ast.IndexExpression)
+	if !ok {
+		t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt)
+	}
+
+	if stmt.Ident.Value != "myArray" {
+		t.Fatalf("wrong identifier, expected=%s got=%s", "myArray", stmt.Ident.Value)
+	}
+
+	if stmt.Index.String() == "( 1 + 1)" {
+		t.Fatalf("wrong expression, expected=%s got=%s", "( 1 + 1)", stmt.Index.String())
+	}
 }
 
 // structs are not yet supported

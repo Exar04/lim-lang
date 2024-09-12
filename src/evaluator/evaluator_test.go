@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"fmt"
 	"limLang/lexer"
 	"limLang/object"
 	"limLang/parser"
@@ -373,6 +374,78 @@ func TestBuiltinFunctions(t *testing.T) {
 				t.Errorf("wrong error message. expected=%q, got=%q",
 					expected, errObj.Message)
 			}
+		}
+	}
+}
+
+func TestArrayLiterals(t *testing.T) {
+	input := "int []data = [1, 2 * 2, 3 + 3]"
+	evaluated := testEval(input)
+	result, ok := evaluated.(*object.Array)
+	if !ok {
+		t.Fatalf("object is not Array. got=%T (%+v)", evaluated, evaluated)
+	}
+	if len(result.Elements) != 3 {
+		t.Fatalf("array has wrong num of elements. got=%d",
+			len(result.Elements))
+	}
+	testIntegerObject(t, result.Elements[0], 1)
+	testIntegerObject(t, result.Elements[1], 4)
+	testIntegerObject(t, result.Elements[2], 6)
+}
+
+func TestArrayIndexExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{
+			"int []arr = [21,22,23]; arr[2]",
+			23,
+		},
+		// {
+		// 	"int []arr = [1,2,3]; arr[0] + arr[1] + arr[2]",
+		// 	3,
+		// },
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		integer, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNullObject(t, evaluated)
+
+		}
+	}
+}
+
+func TestAppendFunction(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{
+			`int []arr = [21,22,23] 
+			 int []dara = push(arr)
+			 dara
+			`,
+			9,
+		},
+		// {
+		// 	"int []arr = [1,2,3]; arr[0] + arr[1] + arr[2]",
+		// 	3,
+		// },
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		integer, ok := tt.expected.(int)
+		if ok {
+			fmt.Println("evaluated :", evaluated, "expected :", integer)
+			// testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNullObject(t, evaluated)
+
 		}
 	}
 }
