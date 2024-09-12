@@ -7,7 +7,11 @@
     bool databool = true;
     float data = 3.14;
     string dataStr = "data";
-    dataStr = "newData";
+    // dataStr = "newData";
+
+    int []arr = [1,2,3]
+    arr[2]
+
 
     if 5 < 10 {
         print("worked if");
@@ -27,11 +31,8 @@
         print("This is the next number",num + 1);
     }
 
-    int arr[5] = {1,2,3,4,5};
-    string arrStr[3] = {"abc", "123", "aaa"};
-
-    int arrAdr = &arr;
-    print(arrAdr);
-    print(*arrAdr[0])
+    // int arrAdr = &arr;
+    // print(arrAdr);
+    // print(*arrAdr[0])
 
 ```
