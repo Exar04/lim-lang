@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"fmt"
 	"limLang/object"
 )
 
@@ -19,6 +20,15 @@ var buildtins = map[string]*object.Builtin{
 			default:
 				return newError("argument to `len` not supported, got %s", args[0].Type())
 			}
+		},
+	},
+
+	"print": &object.Builtin{
+		Fn: func(args ...object.Object) object.Object {
+			for _, arg := range args {
+				fmt.Print(arg)
+			}
+			return nil
 		},
 	},
 

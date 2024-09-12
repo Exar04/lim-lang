@@ -449,3 +449,24 @@ func TestAppendFunction(t *testing.T) {
 		}
 	}
 }
+
+func TestPrintFunction(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{
+			`int []arr = [21,22,23] 
+			 print(arr)
+			 print("hehe")
+			 print("hehe"+"lala")
+			`,
+			9,
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		fmt.Println(evaluated)
+	}
+}
