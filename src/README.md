@@ -12,13 +12,13 @@ Language symentics
     int arr[] = {1,2,3,4}
     string strs[] = {"la", "ba", "ka"}
 
-    struct student {
-        name string
-        age int
-    }
-    s1 = new student
-    s1.name = "yash"
-    s1.age = 2 
+    // struct student {
+    //     name string
+    //     age int
+    // }
+    // s1 = new student
+    // s1.name = "yash"
+    // s1.age = 2 
 
     if 2 < 10 {
         return true
